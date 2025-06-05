@@ -1,13 +1,14 @@
 {
   "project_info": {
-    "project_number": "785076998004",
-    "project_id": "tugasakhirembed",
-    "storage_bucket": "tugasakhirembed.firebasestorage.app"
+    "project_number": "595609919876",
+    "firebase_url": "https://smart-portable-dehumidifier-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "smart-portable-dehumidifier",
+    "storage_bucket": "smart-portable-dehumidifier.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:785076998004:android:d457577d999fb324846621",
+        "mobilesdk_app_id": "1:595609919876:android:5bb79f6947c8e7291dfdd1",
         "android_client_info": {
           "package_name": "com.example.smartdehumidifier"
         }
@@ -15,7 +16,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBH9Zqf_u2o_sxSGSUe_SlfU-EY2y2XlDI"
+          "current_key": "AIzaSyCkQ4lKPzABobhjME650aH8fM7kYxl5WHQ"
         }
       ],
       "services": {
