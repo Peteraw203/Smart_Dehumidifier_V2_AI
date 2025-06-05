@@ -23,6 +23,18 @@ import  com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.auth.FirebaseAuth
+import androidx.navigation.compose.*
+import  androidx.compose.ui.platform.LocalContext
+import android.speech.SpeechRecognizer
+import android.speech.RecognizerIntent
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.compose.rememberLauncherForActivityResult
+import  androidx.compose.runtime.Composable
+import  androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.LaunchedEffect
+import android.widget.Toast
+import android.content.pm.PackageManager
+import  androidx.core.content.ContextCompat
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,39 +43,127 @@ class MainActivity : ComponentActivity() {
         val auth = FirebaseAuth.getInstance()
 
         setContent {
+            val navController = rememberNavController()
             var isLoggedIn by remember { mutableStateOf(auth.currentUser != null) }
 
-            if (isLoggedIn) {
-                IoTDashboard(onLogout = {isLoggedIn = false})
-            } else {
+            NavHost(
+                navController = navController,
+                startDestination = if (isLoggedIn) "dashboard" else "login"
+            ) {
+                composable("login") {
+                    LoginScreen(auth = auth, onLoginSuccess = {
+                        isLoggedIn = true
+                        navController.navigate("dashboard") {
+                            popUpTo("login") { inclusive = true }
+                        }
+                    })
+                }
+                composable("dashboard") {
+
+                    IoTDashboard(
+                        onLogout = {
+                            auth.signOut()
+                            isLoggedIn = false
+                            navController.navigate("login") {
+                                popUpTo("dashboard") { inclusive = true }
+                            }
+                        },
+                        onOpenSettings = {
+                            navController.navigate("settings")
+                        }
+                    )
+                }
+                composable("settings") {
+                    SettingsPage(
+                        onBack = { navController.popBackStack() },
+                        onLogout = {
+                            auth.signOut()
+                            isLoggedIn = false
+                            navController.navigate("login") {
+                                popUpTo("dashboard") { inclusive = true }
+                            }
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+@Composable
+fun RequestAudioPermission() {
+    val context = LocalContext.current
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (!isGranted) {
+                Toast.makeText(context, "Permission denied!", Toast.LENGTH_SHORT).show()
+            }
+        }
+    )
+
+    LaunchedEffect(Unit) {
+        if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            permissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
+        }
+    }
+}
+
+
+/*
+@Composable
+fun SmartDehumidifierApp() {
+    val auth = remember { FirebaseAuth.getInstance() }
+    var isLoggedIn by remember { mutableStateOf(auth.currentUser != null) }
+    val navController = rememberNavController()
+
+    Surface(modifier = Modifier.fillMaxSize()) {
+        NavHost(
+            navController = navController,
+            startDestination = if (isLoggedIn) "dashboard" else "login"
+        ) {
+            composable("login") {
                 LoginScreen(
                     auth = auth,
-                    onLoginSuccess = { isLoggedIn = true }
+                    onLoginSuccess = {
+                        isLoggedIn = true
+                        navController.navigate("dashboard") {
+                            popUpTo("login") { inclusive = true }
+                        }
+                    }
+                )
+            }
+            composable("dashboard") {
+                IoTDashboard(
+                    onLogout = {
+                        auth.signOut()
+                        isLoggedIn = false
+                        navController.navigate("login") {
+                            popUpTo("dashboard") { inclusive = true }
+                        }
+                    },
+                    onOpenSettings = {
+                        navController.navigate("settings")
+                    }
+                )
+            }
+            composable("settings") {
+                SettingsPage(
+                    onBack = { navController.popBackStack() },
+                    onLogout = {
+                        auth.signOut()
+                        isLoggedIn = false
+                        navController.navigate("login") {
+                            popUpTo("dashboard") { inclusive = true }
+                        }
+                    }
                 )
             }
         }
     }
 }
-
-@Composable
-fun SmartDehumidifierApp() {
-    val auth = remember { FirebaseAuth.getInstance() }
-    var isLoggedIn by remember { mutableStateOf(auth.currentUser != null) }
-
-    Surface(modifier = Modifier.fillMaxSize()) {
-        if (isLoggedIn) {
-            IoTDashboard(
-                onLogout = { isLoggedIn = false }
-            )
-        } else {
-            LoginScreen(
-                onLoginSuccess = { isLoggedIn = true },
-                auth = auth
-            )
-        }
-    }
-}
-
+*/
 @Composable
 fun LoginScreen(onLoginSuccess: () -> Unit, auth: FirebaseAuth) {
 
@@ -173,7 +273,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit, auth: FirebaseAuth) {
 }
 
 @Composable
-fun IoTDashboard(onLogout: () -> Unit) {
+fun IoTDashboard(onLogout: () -> Unit, onOpenSettings: () -> Unit) {
     val auth = FirebaseAuth.getInstance()
     val database = FirebaseDatabase.getInstance("https://smart-portable-dehumidifier-default-rtdb.asia-southeast1.firebasedatabase.app/")
     val humidityRef = database.getReference("humidity")
@@ -182,10 +282,41 @@ fun IoTDashboard(onLogout: () -> Unit) {
     val waterLevelRef = database.getReference("waterLevel")
 
     var humidity by remember { mutableStateOf(0) }
-    var mode by remember { mutableStateOf(0) }
+    var mode by remember { mutableIntStateOf(0) }
     var temperature by remember { mutableStateOf(0) }
     var waterLevel by remember { mutableStateOf(0) }
     var showDialog by remember { mutableStateOf(false) }
+
+    var context = LocalContext.current
+    val voiceRecognizerManager = remember { VoiceRecognizerManager(context) }
+    var voiceRecognizerText by remember { mutableStateOf("") }
+    var isListening by remember { mutableStateOf(false) }
+    RequestAudioPermission()
+
+
+    /*fun toggleListening() {
+        if (isListening) {
+            voiceRecognizerManager.stopListening()
+            isListening = false
+        } else {
+            voiceRecognizerManager.startListening(onVoiceResult)
+            isListening = true
+        }
+    } */
+
+    // Fungsi untuk proses command suara
+    fun processVoiceCommand(result: String) {
+        voiceRecognizerText = result
+        when (result.lowercase(Locale.getDefault())) {
+            "turn on" -> modeRef.setValue(1)
+            "auto mode" -> modeRef.setValue(2)
+            "turn off" -> modeRef.setValue(0)
+            else -> {
+                // Bisa kasih feedback kalau ga dikenali
+                voiceRecognizerText = "Unknown command: $result"
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
         humidityRef.addValueEventListener(object : ValueEventListener {
@@ -212,6 +343,13 @@ fun IoTDashboard(onLogout: () -> Unit) {
             }
             override fun onCancelled(error: DatabaseError) {}
         })
+        modeRef.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                mode = snapshot.getValue(Int::class.java) ?: 0
+            }
+            override fun onCancelled(error: DatabaseError) {}
+        })
+
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -222,7 +360,7 @@ fun IoTDashboard(onLogout: () -> Unit) {
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(45.dp))
             Text("SMART DEHUMIDIFIER", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.White)
             Spacer(modifier = Modifier.height(80.dp))
 
@@ -281,43 +419,60 @@ fun IoTDashboard(onLogout: () -> Unit) {
                     color = Color.White
                 )
             }
-        }
 
-        // ⚙️ Tombol Settings
-        Box(modifier = Modifier
-            .align(Alignment.TopEnd)
-            .padding(16.dp)) {
+            Spacer(modifier = Modifier.height(12.dp))
+
             Button(
-                onClick = { showDialog = true },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                onClick = { /* tidak pakai onClick biasa */ },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(60.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Cyan),
+                // Ini penting: pakai pointerInput untuk detect press & release
+                // Compose Button ga punya onPress/onRelease built-in, jadi pakai pointerInput
             ) {
-                Text("⚙️", color = Color.White, fontSize = 18.sp)
+                Text(
+                    text = "Hold to Talk",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
             }
         }
 
-        // 🧷 Dialog Settings
-        if (showDialog) {
-            AlertDialog(
-                onDismissRequest = { showDialog = false },
-                title = { Text("Settings", fontWeight = FontWeight.Bold) },
-                text = { Text("Do you want to log out?") },
-                confirmButton = {
-                    TextButton(onClick = {
-                        auth.signOut()
-                        onLogout()
-                        showDialog = false
-                    }) {
-                        Text("Logout")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showDialog = false }) {
-                        Text("Cancel")
-                    }
-                }
+        // Teks feedback suara
+        if (voiceRecognizerText.isNotEmpty()) {
+            Text(
+                text = "Voice command: $voiceRecognizerText",
+                color = Color.Cyan,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp)
             )
         }
+
+
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        if (voiceRecognizerText.isNotEmpty()) {
+            Text(
+                text = "Voice command recognized: $voiceRecognizerText",
+                color = Color.Cyan,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium
+            )
+        }
+
+        //Tombol Settings
+        Button(
+            onClick = { onOpenSettings() },
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
+            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 4.dp)
+        ) {
+            Text("⚙️", color = Color.White, fontSize = 15.sp)
+        }
+
     }
 }
 

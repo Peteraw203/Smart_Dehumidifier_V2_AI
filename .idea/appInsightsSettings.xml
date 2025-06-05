@@ -10,9 +10,9 @@
               <option name="connection">
                 <ConnectionSetting>
                   <option name="appId" value="com.example.smartdehumidifier" />
-                  <option name="mobileSdkAppId" value="1:785076998004:android:d457577d999fb324846621" />
-                  <option name="projectId" value="tugasakhirembed" />
-                  <option name="projectNumber" value="785076998004" />
+                  <option name="mobileSdkAppId" value="1:595609919876:android:5bb79f6947c8e7291dfdd1" />
+                  <option name="projectId" value="smart-portable-dehumidifier" />
+                  <option name="projectNumber" value="595609919876" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
