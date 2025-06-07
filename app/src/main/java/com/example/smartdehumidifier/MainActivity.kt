@@ -27,14 +27,22 @@ import androidx.navigation.compose.*
 import  androidx.compose.ui.platform.LocalContext
 //import android.speech.SpeechRecognizer
 //import android.speech.RecognizerIntent
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.compose.rememberLauncherForActivityResult
+//import androidx.activity.result.contract.ActivityResultContracts
+//import androidx.activity.compose.rememberLauncherForActivityResult
 import  androidx.compose.runtime.Composable
 //import  androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.LaunchedEffect
-import android.widget.Toast
-import android.content.pm.PackageManager
-import  androidx.core.content.ContextCompat
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+//import com.google.firebase.ai.FirebaseAI
+import com.google.firebase.ai.*
+import kotlinx.coroutines.*
+import com.google.firebase.*
+import com.google.firebase.ai.type.GenerativeBackend
+
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -70,6 +78,9 @@ class MainActivity : ComponentActivity() {
                         },
                         onOpenSettings = {
                             navController.navigate("settings")
+                        },
+                        onOpenAiPrompt = {
+                            navController.navigate("aiPrompt")
                         }
                     )
                 }
@@ -85,30 +96,34 @@ class MainActivity : ComponentActivity() {
                         }
                     )
                 }
-            }
-        }
-    }
-}
-@Composable
-fun RequestAudioPermission() {
-    val context = LocalContext.current
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = { isGranted ->
-            if (!isGranted) {
-                Toast.makeText(context, "Permission denied!", Toast.LENGTH_SHORT).show()
-            }
-        }
-    )
 
-    LaunchedEffect(Unit) {
-        if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            permissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
+                composable("aiPrompt") {
+                    AiPromptScreen(onBack = { navController.popBackStack() })
+                }
+            }
         }
     }
 }
+//@Composable
+//fun RequestAudioPermission() {
+//    val context = LocalContext.current
+//    val permissionLauncher = rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.RequestPermission(),
+//        onResult = { isGranted ->
+//            if (!isGranted) {
+//                Toast.makeText(context, "Permission denied!", Toast.LENGTH_SHORT).show()
+//            }
+//        }
+//    )
+//
+//    LaunchedEffect(Unit) {
+//        if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO)
+//            != PackageManager.PERMISSION_GRANTED
+//        ) {
+//            permissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
+//        }
+//    }
+//}
 
 
 @Composable
@@ -220,7 +235,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit, auth: FirebaseAuth) {
 }
 
 @Composable
-fun IoTDashboard(onLogout: () -> Unit, onOpenSettings: () -> Unit) {
+fun IoTDashboard(onLogout: () -> Unit, onOpenSettings: () -> Unit, onOpenAiPrompt: () ->Unit) {
     val auth = FirebaseAuth.getInstance()
     val database = FirebaseDatabase.getInstance("https://smart-portable-dehumidifier-default-rtdb.asia-southeast1.firebasedatabase.app/")
     val humidityRef = database.getReference("humidity")
@@ -228,42 +243,10 @@ fun IoTDashboard(onLogout: () -> Unit, onOpenSettings: () -> Unit) {
     val temperatureRef = database.getReference("temperature")
     val waterLevelRef = database.getReference("waterLevel")
 
-    var humidity by remember { mutableStateOf(0) }
+    var humidity by remember { mutableIntStateOf(0) }
     var mode by remember { mutableIntStateOf(0) }
-    var temperature by remember { mutableStateOf(0) }
-    var waterLevel by remember { mutableStateOf(0) }
-    //var showDialog by remember { mutableStateOf(false) }
-
-    var context = LocalContext.current
-    //val voiceRecognizerManager = remember { VoiceRecognizerManager(context) }
-    var voiceRecognizerText by remember { mutableStateOf("") }
-    //var isListening by remember { mutableStateOf(false) }
-    RequestAudioPermission()
-
-
-    /*fun toggleListening() {
-        if (isListening) {
-            voiceRecognizerManager.stopListening()
-            isListening = false
-        } else {
-            voiceRecognizerManager.startListening(onVoiceResult)
-            isListening = true
-        }
-    } */
-
-//    // Fungsi untuk proses command suara
-//    fun processVoiceCommand(result: String) {
-//        voiceRecognizerText = result
-//        when (result.lowercase(Locale.getDefault())) {
-//            "turn on" -> modeRef.setValue(1)
-//            "auto mode" -> modeRef.setValue(2)
-//            "turn off" -> modeRef.setValue(0)
-//            else -> {
-//                // Bisa kasih feedback kalau ga dikenali
-//                voiceRecognizerText = "Unknown command: $result"
-//            }
-//        }
-//    }
+    var temperature by remember { mutableIntStateOf(0) }
+    var waterLevel by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(Unit) {
         humidityRef.addValueEventListener(object : ValueEventListener {
@@ -380,50 +363,20 @@ fun IoTDashboard(onLogout: () -> Unit, onOpenSettings: () -> Unit) {
                 )
             }
 
-//            Spacer(modifier = Modifier.height(12.dp))
-//
-//            Button(
-//                onClick = { /* tidak pakai onClick biasa */ },
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .height(60.dp),
-//                colors = ButtonDefaults.buttonColors(containerColor = Color.Cyan),
-//                // Ini penting: pakai pointerInput untuk detect press & release
-//                // Compose Button ga punya onPress/onRelease built-in, jadi pakai pointerInput
-//            ) {
-//                Text(
-//                    text = "Hold to Talk",
-//                    fontSize = 18.sp,
-//                    fontWeight = FontWeight.Bold,
-//                    color = Color.White
-//                )
+            Spacer(modifier = Modifier.height(16.dp))
 
+            Button(
+                onClick = { onOpenAiPrompt() },
+                modifier = Modifier.fillMaxWidth().height(60.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9C27B0)) // Ungu
+            ) {
+                Text("Dehumidifier AI", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
+
         }
-
-//        // Teks feedback suara
-//        if (voiceRecognizerText.isNotEmpty()) {
-//            Text(
-//                text = "Voice command: $voiceRecognizerText",
-//                color = Color.Cyan,
-//                fontSize = 16.sp,
-//                fontWeight = FontWeight.Medium,
-//                modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp)
-//            )
-//        }
-
-
+    }
 
         Spacer(modifier = Modifier.height(20.dp))
-
-        if (voiceRecognizerText.isNotEmpty()) {
-            Text(
-                text = "Voice command recognized: $voiceRecognizerText",
-                color = Color.Cyan,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium
-            )
-        }
 
         //Tombol Settings
         Button(
@@ -435,6 +388,110 @@ fun IoTDashboard(onLogout: () -> Unit, onOpenSettings: () -> Unit) {
         }
 
 }
+@Composable
+fun AiPromptScreen(onBack: () -> Unit) {
+    var prompt by remember { mutableStateOf("") }
+    var response by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Dehumidifier AI Prompt",
+            color = Color.White,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        OutlinedTextField(
+            value = prompt,
+            onValueChange = { prompt = it },
+            label = { Text("Masukkan pertanyaan...", color = Color.Gray) },
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.Cyan,
+                unfocusedBorderColor = Color.Gray,
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                focusedLabelColor = Color.Cyan,
+                unfocusedLabelColor = Color.Gray
+            )
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = {
+                isLoading = true
+                response = "Menunggu jawaban AI..."
+
+                // Jalankan di Coroutine Scope
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        val model = Firebase.ai(
+                            backend = GenerativeBackend.googleAI()
+                        ).generativeModel("gemini-2.0-flash")
+
+                        val result = model.generateContent(prompt)
+                        withContext(Dispatchers.Main) {
+                            response = result.text ?: "Tidak ada jawaban dari AI."
+                            isLoading = false
+                        }
+                    } catch (e: Exception) {
+                        withContext(Dispatchers.Main) {
+                            response = "Gagal mengambil jawaban AI: ${e.message}"
+                            isLoading = false
+                        }
+                    }
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+            enabled = !isLoading
+        ) {
+            Text("Kirim ke AI", color = Color.White)
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "Jawaban AI:",
+            color = Color.LightGray,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = response,
+            color = Color.White,
+            modifier = Modifier.verticalScroll(rememberScrollState())
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Button(
+            onClick = onBack,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
+        ) {
+            Text("Kembali", color = Color.White)
+        }
+    }
+}
+
 
 
 // Status Card (Temperature & Water Level) dengan border ganda
