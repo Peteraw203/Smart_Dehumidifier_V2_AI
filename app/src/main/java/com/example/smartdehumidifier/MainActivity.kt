@@ -25,12 +25,12 @@ import com.google.firebase.database.ValueEventListener
 import com.google.firebase.auth.FirebaseAuth
 import androidx.navigation.compose.*
 import  androidx.compose.ui.platform.LocalContext
-import android.speech.SpeechRecognizer
-import android.speech.RecognizerIntent
+//import android.speech.SpeechRecognizer
+//import android.speech.RecognizerIntent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.rememberLauncherForActivityResult
 import  androidx.compose.runtime.Composable
-import  androidx.compose.ui.platform.LocalContext
+//import  androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.LaunchedEffect
 import android.widget.Toast
 import android.content.pm.PackageManager
@@ -111,59 +111,6 @@ fun RequestAudioPermission() {
 }
 
 
-/*
-@Composable
-fun SmartDehumidifierApp() {
-    val auth = remember { FirebaseAuth.getInstance() }
-    var isLoggedIn by remember { mutableStateOf(auth.currentUser != null) }
-    val navController = rememberNavController()
-
-    Surface(modifier = Modifier.fillMaxSize()) {
-        NavHost(
-            navController = navController,
-            startDestination = if (isLoggedIn) "dashboard" else "login"
-        ) {
-            composable("login") {
-                LoginScreen(
-                    auth = auth,
-                    onLoginSuccess = {
-                        isLoggedIn = true
-                        navController.navigate("dashboard") {
-                            popUpTo("login") { inclusive = true }
-                        }
-                    }
-                )
-            }
-            composable("dashboard") {
-                IoTDashboard(
-                    onLogout = {
-                        auth.signOut()
-                        isLoggedIn = false
-                        navController.navigate("login") {
-                            popUpTo("dashboard") { inclusive = true }
-                        }
-                    },
-                    onOpenSettings = {
-                        navController.navigate("settings")
-                    }
-                )
-            }
-            composable("settings") {
-                SettingsPage(
-                    onBack = { navController.popBackStack() },
-                    onLogout = {
-                        auth.signOut()
-                        isLoggedIn = false
-                        navController.navigate("login") {
-                            popUpTo("dashboard") { inclusive = true }
-                        }
-                    }
-                )
-            }
-        }
-    }
-}
-*/
 @Composable
 fun LoginScreen(onLoginSuccess: () -> Unit, auth: FirebaseAuth) {
 
@@ -285,12 +232,12 @@ fun IoTDashboard(onLogout: () -> Unit, onOpenSettings: () -> Unit) {
     var mode by remember { mutableIntStateOf(0) }
     var temperature by remember { mutableStateOf(0) }
     var waterLevel by remember { mutableStateOf(0) }
-    var showDialog by remember { mutableStateOf(false) }
+    //var showDialog by remember { mutableStateOf(false) }
 
     var context = LocalContext.current
-    val voiceRecognizerManager = remember { VoiceRecognizerManager(context) }
+    //val voiceRecognizerManager = remember { VoiceRecognizerManager(context) }
     var voiceRecognizerText by remember { mutableStateOf("") }
-    var isListening by remember { mutableStateOf(false) }
+    //var isListening by remember { mutableStateOf(false) }
     RequestAudioPermission()
 
 
@@ -304,19 +251,19 @@ fun IoTDashboard(onLogout: () -> Unit, onOpenSettings: () -> Unit) {
         }
     } */
 
-    // Fungsi untuk proses command suara
-    fun processVoiceCommand(result: String) {
-        voiceRecognizerText = result
-        when (result.lowercase(Locale.getDefault())) {
-            "turn on" -> modeRef.setValue(1)
-            "auto mode" -> modeRef.setValue(2)
-            "turn off" -> modeRef.setValue(0)
-            else -> {
-                // Bisa kasih feedback kalau ga dikenali
-                voiceRecognizerText = "Unknown command: $result"
-            }
-        }
-    }
+//    // Fungsi untuk proses command suara
+//    fun processVoiceCommand(result: String) {
+//        voiceRecognizerText = result
+//        when (result.lowercase(Locale.getDefault())) {
+//            "turn on" -> modeRef.setValue(1)
+//            "auto mode" -> modeRef.setValue(2)
+//            "turn off" -> modeRef.setValue(0)
+//            else -> {
+//                // Bisa kasih feedback kalau ga dikenali
+//                voiceRecognizerText = "Unknown command: $result"
+//            }
+//        }
+//    }
 
     LaunchedEffect(Unit) {
         humidityRef.addValueEventListener(object : ValueEventListener {
@@ -361,7 +308,12 @@ fun IoTDashboard(onLogout: () -> Unit, onOpenSettings: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(45.dp))
-            Text("SMART DEHUMIDIFIER", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Text(
+                "SMART DEHUMIDIFIER",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
             Spacer(modifier = Modifier.height(80.dp))
 
             // Circular Gauge
@@ -376,11 +328,19 @@ fun IoTDashboard(onLogout: () -> Unit, onOpenSettings: () -> Unit) {
                         style = Stroke(width = 80f, cap = StrokeCap.Round)
                     )
                 }
-                Text(text = "$humidity%", fontSize = 38.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text(
+                    text = "$humidity%",
+                    fontSize = 38.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
             }
 
             Spacer(modifier = Modifier.height(60.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
                 StatusCard("Temperature", "$temperature°C", Color.DarkGray, Color(0xFFE3F2FD))
                 StatusCard(
                     "Water Level", "$waterLevel%",
@@ -420,36 +380,37 @@ fun IoTDashboard(onLogout: () -> Unit, onOpenSettings: () -> Unit) {
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+//            Spacer(modifier = Modifier.height(12.dp))
+//
+//            Button(
+//                onClick = { /* tidak pakai onClick biasa */ },
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .height(60.dp),
+//                colors = ButtonDefaults.buttonColors(containerColor = Color.Cyan),
+//                // Ini penting: pakai pointerInput untuk detect press & release
+//                // Compose Button ga punya onPress/onRelease built-in, jadi pakai pointerInput
+//            ) {
+//                Text(
+//                    text = "Hold to Talk",
+//                    fontSize = 18.sp,
+//                    fontWeight = FontWeight.Bold,
+//                    color = Color.White
+//                )
 
-            Button(
-                onClick = { /* tidak pakai onClick biasa */ },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Cyan),
-                // Ini penting: pakai pointerInput untuk detect press & release
-                // Compose Button ga punya onPress/onRelease built-in, jadi pakai pointerInput
-            ) {
-                Text(
-                    text = "Hold to Talk",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
             }
         }
 
-        // Teks feedback suara
-        if (voiceRecognizerText.isNotEmpty()) {
-            Text(
-                text = "Voice command: $voiceRecognizerText",
-                color = Color.Cyan,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp)
-            )
-        }
+//        // Teks feedback suara
+//        if (voiceRecognizerText.isNotEmpty()) {
+//            Text(
+//                text = "Voice command: $voiceRecognizerText",
+//                color = Color.Cyan,
+//                fontSize = 16.sp,
+//                fontWeight = FontWeight.Medium,
+//                modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp)
+//            )
+//        }
 
 
 
@@ -473,7 +434,6 @@ fun IoTDashboard(onLogout: () -> Unit, onOpenSettings: () -> Unit) {
             Text("⚙️", color = Color.White, fontSize = 15.sp)
         }
 
-    }
 }
 
 
