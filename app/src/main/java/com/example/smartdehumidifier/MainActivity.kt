@@ -24,7 +24,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.auth.FirebaseAuth
 import androidx.navigation.compose.*
-import  androidx.compose.ui.platform.LocalContext
+//import  androidx.compose.ui.platform.LocalContext
 //import android.speech.SpeechRecognizer
 //import android.speech.RecognizerIntent
 //import androidx.activity.result.contract.ActivityResultContracts
@@ -353,9 +353,9 @@ fun IoTDashboard(onLogout: () -> Unit, onOpenSettings: () -> Unit, onOpenAiPromp
             ) {
                 Text(
                     text = when (mode) {
-                        1 -> "Turn On"
+                        1 -> "On"
                         2 -> "Auto Mode"
-                        else -> "Turn Off"
+                        else -> "Off"
                     },
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
@@ -431,7 +431,7 @@ fun AiPromptScreen(onBack: () -> Unit) {
         Button(
             onClick = {
                 isLoading = true
-                response = "Menunggu jawaban AI..."
+                response = "Menunggu jawaban Dehumidifier AI..."
 
                 // Jalankan di Coroutine Scope
                 CoroutineScope(Dispatchers.IO).launch {
@@ -442,7 +442,7 @@ fun AiPromptScreen(onBack: () -> Unit) {
 
                         val result = model.generateContent(prompt)
                         withContext(Dispatchers.Main) {
-                            response = result.text ?: "Tidak ada jawaban dari AI."
+                            response = result.text ?: "Tidak ada jawaban."
                             isLoading = false
                         }
                     } catch (e: Exception) {
