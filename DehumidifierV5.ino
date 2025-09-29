@@ -8,10 +8,10 @@
 #include <WiFiManager.h>
 
 // Firebase credentials
-#define FIREBASE_API_KEY "AIzaSyCfG0ZlB_DRHyQkscr8TqKEdxcSg2zrnQE"
-#define FIREBASE_URL "https://smart-portable-dehumidifier-default-rtdb.asia-southeast1.firebasedatabase.app/"
-#define USER_EMAIL "ehehenanda@gmail.com"
-#define USER_PASSWORD "rimuru03"
+#define FIREBASE_API_KEY "your key"
+#define FIREBASE_URL "your url/"
+#define USER_EMAIL "email"
+#define USER_PASSWORD "pass"
 
 // Pin assignments
 #define RELAY_PIN 27
